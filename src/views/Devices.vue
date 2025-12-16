@@ -1,28 +1,31 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
 import { useDevices } from '@/composables/useDevices';
+import { useAuth0 } from '@auth0/auth0-vue';
 
 const { devices, loading, error, fetchDevices } = useDevices();
+const { isAuthenticated } = useAuth0();
 
-onMounted(() => {
-  fetchDevices();
-});
+onMounted(fetchDevices);
+watch(isAuthenticated, fetchDevices);
 </script>
 
 <template>
   <div class="devices-view">
-    <h1>Available Devices</h1>
+    <h1>Devices</h1>
 
-    <div v-if="loading">Loading devices…</div>
-    <div v-else-if="error">Error: {{ error }}</div>
+    <p v-if="loading">Loading devices…</p>
+    <p v-else-if="error" class="error">{{ error }}</p>
 
     <ul v-else class="list">
-      <li v-for="d in devices" :key="d.id" class="card">
-        <strong>{{ d.name }}</strong>
-        <p>Type: {{ d.type }}</p>
-        <p>Status: <b :style="{ color: d.isAvailable ? 'green' : 'red' }">
-          {{ d.isAvailable ? "Available" : "Unavailable" }}
-        </b></p>
+      <li
+        v-for="d in devices"
+        :key="d.id ?? `${d.brand}-${d.model}`"
+        class="card"
+      >
+        <strong class="title"> {{ d.brand }} {{ d.model }} </strong>
+
+        <p><strong>Category:</strong> {{ d.category }}</p>
       </li>
     </ul>
   </div>
@@ -32,18 +35,31 @@ onMounted(() => {
 .devices-view {
   max-width: 960px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
 }
+
 .list {
   list-style: none;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 1rem;
 }
+
 .card {
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
+  border-radius: 10px;
   padding: 1rem;
-  border-radius: 8px;
+  background: #fff;
+}
+
+.title {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.error {
+  color: #b00020;
+  font-weight: 600;
 }
 </style>

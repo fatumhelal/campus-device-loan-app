@@ -1,27 +1,40 @@
 import { ref } from 'vue';
+import { useAuth0 } from '@auth0/auth0-vue';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-const devices = ref<any[]>([]);
-const loading = ref(false);
-const error = ref<string | null>(null);
-
 export function useDevices() {
+  const devices = ref<any[]>([]);
+  const loading = ref(false);
+  const error = ref<string | null>(null);
+
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+
   async function fetchDevices() {
     loading.value = true;
     error.value = null;
 
-    try {
-      const res = await fetch(`${API_BASE}/devices`);
-      const json = await res.json();
+    let url = `${API_BASE}/public/devices`;
+    const headers: Record<string, string> = {};
 
-      if (!json.success) {
-        throw new Error("Backend returned error");
+    console.info('[Devices] Fetch started', {
+      authenticated: isAuthenticated.value,
+    });
+
+    try {
+      if (isAuthenticated.value) {
+        const token = await getAccessTokenSilently();
+        url = `${API_BASE}/devices`;
+        headers.Authorization = `Bearer ${token}`;
       }
 
-      devices.value = json.data; // <--- IMPORTANT
-    } catch (err: any) {
-      error.value = err.message;
+      const res = await fetch(url, { headers });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      devices.value = await res.json();
+    } catch (e: any) {
+      console.error('[Devices] Fetch failed', e);
+      error.value = e.message ?? 'Failed to load devices';
     } finally {
       loading.value = false;
     }

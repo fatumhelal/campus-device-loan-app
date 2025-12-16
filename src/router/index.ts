@@ -1,17 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Devices from '../views/Devices.vue';
+import Devices from '@/views/Devices.vue';
 
-const routes = [
-  {
-    path: '/',
-    name: 'devices',
-    component: Devices
-  }
-];
-
-const router = createRouter({
+export default createRouter({
   history: createWebHistory(),
-  routes,
+  routes: [{ path: '/', name: 'devices', component: Devices }],
 });
-
-export default router;
